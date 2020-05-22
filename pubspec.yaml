@@ -1,0 +1,33 @@
+name: belnews
+description: Toute l'actualité du plat pays !
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ">=2.7.0 <3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  provider: ^4.1.2
+  built_collection: '>=2.0.0 <5.0.0'
+  built_value: ^7.0.2
+  http: ^0.12.1
+  intl: ^0.16.1
+  url_launcher: any
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  
+  build_runner: ^1.0.0
+  built_value_generator: ^7.1.0
+
+flutter:
+  uses-material-design: true
+
+  fonts:
+    - family: Google Sans
+      fonts:
+        - asset: assets/GoogleSans.ttf
