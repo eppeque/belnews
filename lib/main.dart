@@ -1,33 +1,43 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:connectivity/connectivity.dart';
+
+import 'dart:collection';
+import 'dart:async';
 
 import 'theme_provider.dart';
 import 'article.dart';
-import 'api_key.dart';
+import 'belnews_bloc.dart';
 
 void main() {
   SystemChrome.setSystemUIOverlayStyle(
     SystemUiOverlayStyle(statusBarColor: Colors.transparent),
   );
+  final belnewsBloc = BelnewsBloc();
   runApp(
     ChangeNotifierProvider(
       create: (_) => ThemeProvider(isDarkTheme: false),
-      child: BelnewsApp(),
+      child: BelnewsApp(bloc: belnewsBloc),
     ),
   );
 }
 
 class BelnewsApp extends StatelessWidget {
+  final BelnewsBloc bloc;
+
+  const BelnewsApp({this.bloc});
+
+  final _title = 'Belnews';
+
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     return MaterialApp(
-      title: 'Belnews',
-      home: Home(title: 'Gros titres'),
+      title: _title,
+      home: Home(title: _title, bloc: bloc),
       theme: themeProvider.getTheme,
       darkTheme: darkTheme,
       debugShowCheckedModeBanner: false,
@@ -37,24 +47,40 @@ class BelnewsApp extends StatelessWidget {
 
 class Home extends StatefulWidget {
   final String title;
+  final BelnewsBloc bloc;
 
-  const Home({Key key, this.title}) : super(key: key);
+  const Home({Key key, @required this.title, @required this.bloc})
+      : super(key: key);
 
   @override
   _HomeState createState() => _HomeState();
 }
 
 class _HomeState extends State<Home> {
-  Future<List<Article>> _getArticles() async {
-    final url =
-        'https://newsapi.org/v2/top-headlines?country=be&apiKey=$apiKey';
-    final res = await http.get(url);
+  bool _isConnected = false;
+  StreamSubscription _subscription;
 
-    if (res.statusCode == 200) {
-      final articles = parseArticles(res.body);
-      return articles;
-    }
-    return null;
+  @override
+  void initState() {
+    super.initState();
+    _subscription = Connectivity()
+        .onConnectivityChanged
+        .listen((ConnectivityResult result) {
+      setState(() {
+        if (result == ConnectivityResult.wifi ||
+            result == ConnectivityResult.mobile) {
+          _isConnected = true;
+        } else {
+          _isConnected = false;
+        }
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _subscription.cancel();
+    super.dispose();
   }
 
   @override
@@ -105,19 +131,43 @@ class _HomeState extends State<Home> {
           ),
         ],
       ),
-      body: FutureBuilder<List<Article>>(
-        future: _getArticles(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(
-              child: CircularProgressIndicator(),
-            );
-          }
-          return ListView(
-            children: snapshot.data.map(_buildItem).toList(),
-          );
-        },
-      ),
+      body: _isConnected
+          ? StreamBuilder<UnmodifiableListView<Article>>(
+              stream: widget.bloc.articles,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(
+                    child: CircularProgressIndicator(),
+                  );
+                }
+                return ListView(
+                  children: snapshot.data.map(_buildItem).toList(),
+                );
+              },
+            )
+          : Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  Icon(
+                    Icons.error_outline,
+                    color: Theme.of(context).errorColor,
+                    size: 50.0,
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(top: 20.0),
+                    child: Text(
+                      'Il semble que vous ne soyez pas connecté à internet !',
+                      style: TextStyle(
+                        fontSize: 24.0,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ],
+              ),
+            ),
     );
   }
 
