@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:connectivity/connectivity.dart';
 
 import 'dart:collection';
-import 'dart:async';
 
 import 'theme_provider.dart';
 import 'article.dart';
 import 'belnews_bloc.dart';
+import 'web_page.dart';
 
 void main() {
   SystemChrome.setSystemUIOverlayStyle(
@@ -58,29 +58,24 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   bool _isConnected = false;
-  StreamSubscription _subscription;
 
   @override
   void initState() {
     super.initState();
-    _subscription = Connectivity()
-        .onConnectivityChanged
-        .listen((ConnectivityResult result) {
-      setState(() {
-        if (result == ConnectivityResult.wifi ||
-            result == ConnectivityResult.mobile) {
-          _isConnected = true;
-        } else {
-          _isConnected = false;
-        }
-      });
-    });
+    _checkConnection();
   }
 
-  @override
-  void dispose() {
-    _subscription.cancel();
-    super.dispose();
+  void _checkConnection() async {
+    final connectivity = await (Connectivity().checkConnectivity());
+
+    setState(() {
+      if (connectivity == ConnectivityResult.wifi ||
+          connectivity == ConnectivityResult.mobile) {
+        _isConnected = true;
+      } else {
+        _isConnected = false;
+      }
+    });
   }
 
   @override
@@ -89,6 +84,7 @@ class _HomeState extends State<Home> {
     return Scaffold(
       appBar: AppBar(
         elevation: 0.0,
+        centerTitle: true,
         title: Text(
           widget.title,
           style: TextStyle(
@@ -98,8 +94,26 @@ class _HomeState extends State<Home> {
         ),
         actions: <Widget>[
           IconButton(
+            icon: Icon(Icons.search),
+            tooltip: 'Rechercher un article',
+            onPressed: () async {
+              final result = await showSearch<Article>(
+                context: context,
+                delegate: SearchPage(widget.bloc.articles),
+              );
+              Navigator.of(context).push(
+                CupertinoPageRoute(
+                  builder: (context) => WebPage(
+                    url: result.url,
+                    author: result.source.name,
+                  ),
+                ),
+              );
+            },
+          ),
+          IconButton(
             icon: Icon(Icons.tune),
-            color: Theme.of(context).accentColor,
+            tooltip: 'Accéder aux paramètres',
             onPressed: () => showModalBottomSheet(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.only(
@@ -120,9 +134,15 @@ class _HomeState extends State<Home> {
                       ),
                       title: Text('Thème sombre'),
                       trailing: Switch(
+                        activeColor: Theme.of(context).accentColor,
                         value: themeProvider.isDarkTheme,
                         onChanged: (val) => themeProvider.setTheme = val,
                       ),
+                    ),
+                    ListTile(
+                      leading: FlutterLogo(),
+                      title: Text(
+                          'This app is developed by Quentin Eppe with Flutter.'),
                     ),
                   ],
                 ),
@@ -155,7 +175,7 @@ class _HomeState extends State<Home> {
                     size: 50.0,
                   ),
                   Padding(
-                    padding: EdgeInsets.only(top: 20.0),
+                    padding: EdgeInsets.only(top: 20.0, bottom: 20.0),
                     child: Text(
                       'Il semble que vous ne soyez pas connecté à internet !',
                       style: TextStyle(
@@ -165,6 +185,7 @@ class _HomeState extends State<Home> {
                       textAlign: TextAlign.center,
                     ),
                   ),
+                  Text('Connectez-vous et relancez l\'application !'),
                 ],
               ),
             ),
@@ -193,16 +214,110 @@ class _HomeState extends State<Home> {
                   Icons.launch,
                   color: Colors.green,
                 ),
-                onPressed: () async {
-                  if (await canLaunch(article.url)) {
-                    launch(article.url);
-                  }
-                },
+                onPressed: () => Navigator.of(context).push(
+                  CupertinoPageRoute(
+                    builder: (context) =>
+                        WebPage(url: article.url, author: article.source.name),
+                  ),
+                ),
               ),
             ],
           ),
         ],
       ),
+    );
+  }
+}
+
+class SearchPage extends SearchDelegate<Article> {
+  Stream<UnmodifiableListView<Article>> articles;
+
+  SearchPage(this.articles);
+
+  @override
+  String get searchFieldLabel => 'Rechercher';
+
+  @override
+  List<Widget> buildActions(BuildContext context) {
+    return [
+      IconButton(
+        icon: Icon(Icons.clear),
+        tooltip: 'Tout effacer',
+        onPressed: () => query = '',
+      ),
+    ];
+  }
+
+  @override
+  Widget buildLeading(BuildContext context) {
+    return IconButton(
+      icon: Icon(Icons.arrow_back),
+      onPressed: () => close(context, null),
+    );
+  }
+
+  @override
+  Widget buildResults(BuildContext context) {
+    return StreamBuilder<UnmodifiableListView<Article>>(
+      stream: articles,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(
+            child: CircularProgressIndicator(),
+          );
+        }
+        final suggestions = snapshot.data
+            .where((a) => a.title.toLowerCase().contains(query.toLowerCase()));
+        return ListView(
+          children: suggestions
+              .map(
+                (a) => Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: ListTile(
+                    leading: Icon(Icons.bookmark),
+                    title: Text(
+                      a.title,
+                      style: TextStyle(fontSize: 24.0),
+                    ),
+                    onTap: () => close(context, a),
+                  ),
+                ),
+              )
+              .toList(),
+        );
+      },
+    );
+  }
+
+  @override
+  Widget buildSuggestions(BuildContext context) {
+    return StreamBuilder<UnmodifiableListView<Article>>(
+      stream: articles,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(
+            child: CircularProgressIndicator(),
+          );
+        }
+        final suggestions = snapshot.data
+            .where((a) => a.title.toLowerCase().contains(query.toLowerCase()));
+        return ListView(
+          children: suggestions
+              .map(
+                (a) => Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: ListTile(
+                    title: Text(
+                      a.title,
+                      style: TextStyle(color: Theme.of(context).accentColor),
+                    ),
+                    onTap: () => query = a.title,
+                  ),
+                ),
+              )
+              .toList(),
+        );
+      },
     );
   }
 }
