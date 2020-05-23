@@ -101,14 +101,16 @@ class _HomeState extends State<Home> {
                 context: context,
                 delegate: SearchPage(widget.bloc.articles),
               );
-              Navigator.of(context).push(
-                CupertinoPageRoute(
-                  builder: (context) => WebPage(
-                    url: result.url,
-                    author: result.source.name,
+              if (result != null) {
+                Navigator.of(context).push(
+                  CupertinoPageRoute(
+                    builder: (context) => WebPage(
+                      url: result.url,
+                      author: result.source.name,
+                    ),
                   ),
-                ),
-              );
+                );
+              }
             },
           ),
           IconButton(
