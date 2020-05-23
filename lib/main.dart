@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:connectivity/connectivity.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import 'dart:collection';
 
@@ -85,6 +86,10 @@ class _HomeState extends State<Home> {
       appBar: AppBar(
         elevation: 0.0,
         centerTitle: true,
+        leading: Opacity(
+          child: Icon(FontAwesomeIcons.newspaper),
+          opacity: .5,
+        ),
         title: Text(
           widget.title,
           style: TextStyle(
@@ -144,7 +149,7 @@ class _HomeState extends State<Home> {
                     ListTile(
                       leading: FlutterLogo(),
                       title: Text(
-                          'This app is developed by Quentin Eppe with Flutter.'),
+                          'Cette application est développée par Quentin Eppe avec Flutter.'),
                     ),
                   ],
                 ),
