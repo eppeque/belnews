@@ -203,7 +203,10 @@ class _HomeState extends State<Home> {
       child: ExpansionTile(
         title: Text(
           article.title,
-          style: TextStyle(fontSize: 24.0),
+          style: TextStyle(
+            fontSize: 24.0,
+            fontFamily: 'Merriweather',
+          ),
         ),
         subtitle: Text(article.source.name),
         children: <Widget>[

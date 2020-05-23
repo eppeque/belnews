@@ -30,6 +30,9 @@ flutter:
   uses-material-design: true
 
   fonts:
+    - family: Merriweather
+      fonts:
+        - asset: assets/Merriweather.ttf
     - family: Google Sans
       fonts:
         - asset: assets/GoogleSans.ttf
