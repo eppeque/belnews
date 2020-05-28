@@ -7,15 +7,20 @@ import 'package:connectivity/connectivity.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import 'dart:collection';
+import 'dart:async';
 
+import 'belnews_bloc.dart';
 import 'theme_provider.dart';
 import 'article.dart';
-import 'belnews_bloc.dart';
 import 'web_page.dart';
 
 void main() {
   SystemChrome.setSystemUIOverlayStyle(
-    SystemUiOverlayStyle(statusBarColor: Colors.transparent),
+    SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      systemNavigationBarColor: Colors.transparent,
+      systemNavigationBarIconBrightness: Brightness.dark,
+    ),
   );
   final belnewsBloc = BelnewsBloc();
   runApp(
@@ -38,10 +43,52 @@ class BelnewsApp extends StatelessWidget {
     final themeProvider = Provider.of<ThemeProvider>(context);
     return MaterialApp(
       title: _title,
-      home: Home(title: _title, bloc: bloc),
+      home: SplashScreen(title: _title, bloc: bloc),
       theme: themeProvider.getTheme,
       darkTheme: darkTheme,
       debugShowCheckedModeBanner: false,
+    );
+  }
+}
+
+class SplashScreen extends StatefulWidget {
+  final String title;
+  final BelnewsBloc bloc;
+
+  const SplashScreen({Key key, @required this.title, @required this.bloc})
+      : super(key: key);
+
+  @override
+  _SplashScreenState createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> {
+  @override
+  void initState() {
+    super.initState();
+    Timer(
+      Duration(seconds: 2),
+      () => Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => Home(title: widget.title, bloc: widget.bloc),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Hero(
+          tag: 'icon',
+          child: Icon(
+            FontAwesomeIcons.newspaper,
+            color: Colors.black,
+            size: 50.0,
+          ),
+        ),
+      ),
     );
   }
 }
@@ -87,7 +134,10 @@ class _HomeState extends State<Home> {
         elevation: 0.0,
         centerTitle: true,
         leading: Opacity(
-          child: Icon(FontAwesomeIcons.newspaper),
+          child: Hero(
+            tag: 'icon',
+            child: Icon(FontAwesomeIcons.newspaper),
+          ),
           opacity: .5,
         ),
         title: Text(
