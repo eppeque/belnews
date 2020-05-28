@@ -6,7 +6,7 @@ Toute l'actualité du plat pays !
 
 This project is a Flutter app.
 
-To run your app: run the `$ flutter run` command.
+To run the app: run the `$ flutter run` command.
 
 We use the `built_value` package to deserialize the JSON data. If you change something in the `article.dart` file run `$ flutter pub run build_runner build` to generate the new code.
 
@@ -16,4 +16,4 @@ This app uses the News API. To be able to receive the data from this API you mus
 final apiKey = '<Your API key>';
 ```
 
-The app will automatically use this key!
+The app will automatically use this key. Happy coding!
