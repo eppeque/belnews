@@ -16,11 +16,7 @@ import 'web_page.dart';
 
 void main() {
   SystemChrome.setSystemUIOverlayStyle(
-    SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      systemNavigationBarColor: Colors.transparent,
-      systemNavigationBarIconBrightness: Brightness.dark,
-    ),
+    SystemUiOverlayStyle(statusBarColor: Colors.transparent),
   );
   final belnewsBloc = BelnewsBloc();
   runApp(
@@ -196,10 +192,17 @@ class _HomeState extends State<Home> {
                         onChanged: (val) => themeProvider.setTheme = val,
                       ),
                     ),
-                    ListTile(
-                      leading: FlutterLogo(),
-                      title: Text(
-                          'Cette application est développée par Quentin Eppe avec Flutter.'),
+                    AboutListTile(
+                      icon: Icon(
+                        Icons.info_outline,
+                        color: Theme.of(context).accentColor,
+                      ),
+                      child: Text('À propos de cette application'),
+                      applicationName: "Belnews",
+                      applicationIcon: Icon(FontAwesomeIcons.newspaper),
+                      applicationVersion: "1.0.0",
+                      applicationLegalese:
+                          "Cette application est développée par Quentin Eppe. Elle utilise l'API de News API. Plus d'infos sur https://newsapi.org. Toute la license de cette application est disponible sur https://github.com/eppeque/belnews/blob/master/LICENSE",
                     ),
                   ],
                 ),
