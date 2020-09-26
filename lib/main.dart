@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
@@ -43,6 +44,13 @@ class BelnewsApp extends StatelessWidget {
       theme: themeProvider.getTheme,
       darkTheme: darkTheme,
       debugShowCheckedModeBanner: false,
+      supportedLocales: [
+        Locale('fr', 'BE'),
+      ],
+      localizationsDelegates: [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ],
     );
   }
 }
@@ -150,7 +158,8 @@ class _HomeState extends State<Home> {
             onPressed: () async {
               final result = await showSearch<Article>(
                 context: context,
-                delegate: SearchPage(widget.bloc.articles),
+                delegate:
+                    SearchPage(widget.bloc.articles, themeProvider.getTheme),
               );
               if (result != null) {
                 Navigator.of(context).push(
@@ -197,12 +206,11 @@ class _HomeState extends State<Home> {
                         Icons.info_outline,
                         color: Theme.of(context).accentColor,
                       ),
-                      child: Text('À propos de cette application'),
                       applicationName: "Belnews",
                       applicationIcon: Icon(FontAwesomeIcons.newspaper),
                       applicationVersion: "1.0.0",
                       applicationLegalese:
-                          "Cette application est développée par Quentin Eppe. Elle utilise l'API de News API. Plus d'infos sur https://newsapi.org. Toute la license de cette application est disponible sur https://github.com/eppeque/belnews/blob/master/LICENSE",
+                          "Cette application est développée par Quentin Eppe. Elle utilise l'API de News API. Plus d'infos sur https://newsapi.org",
                     ),
                   ],
                 ),
@@ -294,11 +302,14 @@ class _HomeState extends State<Home> {
 
 class SearchPage extends SearchDelegate<Article> {
   Stream<UnmodifiableListView<Article>> articles;
+  ThemeData themeData;
 
-  SearchPage(this.articles);
+  SearchPage(this.articles, this.themeData);
 
   @override
-  String get searchFieldLabel => 'Rechercher';
+  ThemeData appBarTheme(BuildContext context) {
+    return themeData;
+  }
 
   @override
   List<Widget> buildActions(BuildContext context) {
